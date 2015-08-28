@@ -61,6 +61,3 @@ The output of this command usually says something like:
 
 	INFO  org.test.ZyreRequester - waiting for remaining responses.  received: 49 expected: 10000
 
-        
-
-
