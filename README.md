@@ -59,5 +59,6 @@ On my linux machine, the following benchmark fails to deliver all messages:
     
 The output of this command usually says something like:
 
-	INFO  org.test.ZyreRequester - waiting for remaining responses.  received: 49 expected: 10000
+    INFO  org.test.ZyreRequester - sent: 1000 expected: 10000 received: 292 (3%)
+
 
