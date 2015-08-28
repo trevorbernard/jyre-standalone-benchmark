@@ -14,6 +14,10 @@ public class Cli {
 	
 	private static final Logger log = LoggerFactory.getLogger(Cli.class);
 
+	/**
+	 * Uses commons-cli to parse the command line args
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		
 		Options options = createOptions();

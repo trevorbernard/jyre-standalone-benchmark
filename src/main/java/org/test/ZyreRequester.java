@@ -26,6 +26,8 @@ public class ZyreRequester {
 	private boolean done = false;
 	
 	private Timer timer = new Timer();
+	
+	private int numPeers = 0;
 
 	public ZyreRequester(int interval, int numMsgs, int numResponders) {
 		this.interval = interval;
@@ -36,7 +38,7 @@ public class ZyreRequester {
 	public void start() {
 		zre = new ZreInterface();
 		zre.join(group);		
-		
+
 		log.info("starting requester listener thread");
 		Thread listenerThread = new Thread(new Listener());
 		listenerThread.start();
@@ -44,8 +46,7 @@ public class ZyreRequester {
 		try { Thread.sleep(2000); } 
 		catch (InterruptedException e) { e.printStackTrace(); }
 		
-		log.info("starting send");
-		
+		// Timer reports on number of messages sent/received so far
 		timer.scheduleAtFixedRate(new TimerTask() {
 			  @Override
 			  public void run() {
@@ -56,8 +57,13 @@ public class ZyreRequester {
 		send();
 	}
 	
+	/**
+	 * Send numMsgs shouts
+	 */
 	private void send() {
 		received = 0;
+		
+		log.info("starting send to " + numPeers + " peers");
 		
 		for (sent=0; sent < numMsgs; sent++) {
 			String text = "request-payload-" + sent;
@@ -71,6 +77,9 @@ public class ZyreRequester {
 				catch (InterruptedException e) { e.printStackTrace(); }
 			}
 		}
+		
+		// Done sending. Now wait for a while for responders to finish replying
+		
 		int expected = numMsgs * numResponders;
 		timer.cancel();
 		
@@ -121,6 +130,7 @@ public class ZyreRequester {
 				else if (eventType.equals("JOIN")) {
 					String zyreDeviceId = incoming.popString();
 					String group = incoming.popString();
+					numPeers++;
 					log.debug("peer (" + zyreDeviceId + ") joined: " + group);
 				} 
 				// A device explicitly leaves a group
