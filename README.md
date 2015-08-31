@@ -1,7 +1,9 @@
 # jyre-standalone-benchmark
 
-This project comprises a benchmark test for jyre. It runs in a single 
-process and does the following:
+This project comprises a benchmark test for jyre. Currently, it appears
+that messages are being lost when they are sent at high volumes.
+
+This test runs in a single process and does the following:
 
 * A responder thread sends N "shout" messages to R responders
 * each responder sends a unicast "whisper" response back to the responder
@@ -53,6 +55,7 @@ You can tell it succeeds because the console output reports that it received
     
 ## A command that fails
 
+When the interval between messages decreases, messages appear to get lost.
 On my linux machine, the following benchmark fails to deliver all messages:
 
     > bin/jyre-standalone-benchmark --numResponders 10 --numMsgs 100 --interval 5
