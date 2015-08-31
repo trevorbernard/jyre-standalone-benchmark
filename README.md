@@ -1,7 +1,7 @@
 # jyre-standalone-benchmark
 
-This project comprises a benchmark test for jyre. Currently, it appears
-that messages are being lost when they are sent at high volumes.
+This project comprises a benchmark test for jyre. *Currently, it appears
+that messages are being lost when they are sent at high volumes.*
 
 This test runs in a single process and does the following:
 
