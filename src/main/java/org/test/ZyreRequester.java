@@ -43,8 +43,12 @@ public class ZyreRequester {
 		Thread listenerThread = new Thread(new Listener());
 		listenerThread.start();
 		
-		try { Thread.sleep(2000); } 
-		catch (InterruptedException e) { e.printStackTrace(); }
+
+		while(numPeers < numResponders) {
+			log.info("waiting for peers to join. so far we have: " + numPeers + " out of " + numResponders);
+			try { Thread.sleep(200); } 
+			catch (InterruptedException e) { e.printStackTrace(); }
+		}
 		
 		// Timer reports on number of messages sent/received so far
 		timer.scheduleAtFixedRate(new TimerTask() {
