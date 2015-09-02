@@ -23,8 +23,6 @@ public class ZyreRequester {
 	private int numMsgs;
 	private int numResponders;
 	
-	private boolean done = false;
-	
 	private Timer timer = new Timer();
 	
 	private int numPeers = 0;
@@ -39,16 +37,17 @@ public class ZyreRequester {
 		zre = new ZreInterface();
 		zre.join(group);		
 
-		log.info("starting requester listener thread");
+		// thread for requester to receive responses 
 		Thread listenerThread = new Thread(new Listener());
 		listenerThread.start();
 		
-
+		// Wait for all expected peers to join before sending
 		while(numPeers < numResponders) {
 			log.info("waiting for peers to join. so far we have: " + numPeers + " out of " + numResponders);
 			try { Thread.sleep(200); } 
 			catch (InterruptedException e) { e.printStackTrace(); }
 		}
+		log.info("all " + numPeers + " peers joined");
 		
 		// Timer reports on number of messages sent/received so far
 		timer.scheduleAtFixedRate(new TimerTask() {
@@ -67,8 +66,6 @@ public class ZyreRequester {
 	private void send() {
 		received = 0;
 		
-		log.info("starting send to " + numPeers + " peers");
-		
 		for (sent=0; sent < numMsgs; sent++) {
 			String text = "request-payload-" + sent;
 			ZMsg outgoing = new ZMsg();
@@ -81,9 +78,9 @@ public class ZyreRequester {
 				catch (InterruptedException e) { e.printStackTrace(); }
 			}
 		}
-		
+
 		// Done sending. Now wait for a while for responders to finish replying
-		
+		log.info("done sending");
 		int expected = numMsgs * numResponders;
 		timer.cancel();
 		
@@ -108,7 +105,7 @@ public class ZyreRequester {
 
 		@Override
 		public void run() {
-			while(!done) {
+			while(true) {
 				ZMsg incoming = zre.recv();
 			
 				if (incoming == null) {// Interrupted
@@ -118,43 +115,18 @@ public class ZyreRequester {
 							
 				String eventType = incoming.popString();			
 				
-				// A Zyre-enabled device enters the network
-				if (eventType.equals("ENTER")) {
-					String zyreDeviceId = incoming.popString();
-					log.debug("peer (" + zyreDeviceId + ") entered network");
-				} 
 				// responder messages are received here
-				else if (eventType.equals("WHISPER")) {
-					String zyreDeviceId = incoming.popString();
-					String serializedMsg = incoming.popString();
-					log.debug("peer (" + zyreDeviceId + ") responded: " + serializedMsg);
+				if (eventType.equals("WHISPER")) {
 					received++;
 				} 
 				// A device joins a group
 				else if (eventType.equals("JOIN")) {
-					String zyreDeviceId = incoming.popString();
-					String group = incoming.popString();
 					numPeers++;
-					log.debug("peer (" + zyreDeviceId + ") joined: " + group);
 				} 
-				// A device explicitly leaves a group
-				else if (eventType.equals("LEAVE")) {
-					String zyreDeviceId = incoming.popString();
-					String group = incoming.popString();
-					log.debug("peer (" + zyreDeviceId + ") left " + group);					
-				}
-				// A device exits the network
-				else if (eventType.equals("EXIT")) {
-					String zyreDeviceId = incoming.popString();
-					log.debug("peer (" + zyreDeviceId + ") exited");
-				}
 				else {
-					log.warn("unexpected event: " + eventType);
+					//not handling other events
 				}
-				
 			}
-			log.info("listener thread stopped");
 		}
-		
 	}
 }

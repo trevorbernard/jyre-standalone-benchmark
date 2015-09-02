@@ -9,18 +9,15 @@ public class ZyreResponder implements Runnable {
 	
 	private static final Logger log = LoggerFactory.getLogger(ZyreResponder.class);
 	
-	private ZreInterface zre = null;
+	private ZreInterface zre;
 	private String group = "local";
-	
-	private int received = 0;
-	private int sent = 0;
 	
 	@Override
 	public void run() {
-		log.info("responder thread starting");
+		log.debug("responder thread starting");
 		zre = new ZreInterface();
 		zre.join(group);
-
+		
 		while(true) {
 			ZMsg incoming = zre.recv();
 		
@@ -31,25 +28,21 @@ public class ZyreResponder implements Runnable {
 						
 			String eventType = incoming.popString();			
 			
+			// Respond to a shout with a whisper to sender
 			if (eventType.equals("SHOUT")) {
 				String requesterId = incoming.popString();
 				String group = incoming.popString();
 				String payload = incoming.popString();
-				log.debug("peer (" + requesterId + ") shouted to group: " + group + ": " + payload);
-				received++;
 				
 				ZMsg response = new ZMsg();
 				response.add(requesterId);
 				response.add("response-to-" + payload);
 				
 				zre.whisper(response);
-				sent++;
 			} 
 			else {
-				log.trace("not handling event: " + eventType);
+				//not handling other events
 			}
 		}
-		
 	}
-
 }
