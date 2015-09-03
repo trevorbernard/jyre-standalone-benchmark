@@ -2,6 +2,7 @@ package org.test;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +13,12 @@ public class ZyreRequester {
 	
 	private static final Logger log = LoggerFactory.getLogger(ZyreRequester.class);
 	
-	private String group = "local";
+	private static final String group = "local";
 	
 	private ZreInterface zre = null;
 	
-	private long sent = 0;
-	private long received = 0;
+	private AtomicLong sent = new AtomicLong(0);
+	private AtomicLong received = new AtomicLong(0);
 	
 	private int interval;
 	private int numMsgs;
@@ -64,10 +65,10 @@ public class ZyreRequester {
 	 * Send numMsgs shouts
 	 */
 	private void send() {
-		received = 0;
+		received.set(0);
 		
-		for (sent=0; sent < numMsgs; sent++) {
-			String text = "request-payload-" + sent;
+		for (int i=0; i < numMsgs; i++) {
+			String text = "request-payload-" + sent.getAndIncrement();
 			ZMsg outgoing = new ZMsg();
 			outgoing.add(group);
 			outgoing.add(text);
@@ -85,7 +86,7 @@ public class ZyreRequester {
 		timer.cancel();
 		
 		int waited = 0;
-		while (received < expected) {
+		while (received.get() < expected) {
 			log.info("waiting for remaining responses.  received: " + received + " expected: " + expected);
 			try { Thread.sleep(2000); } 
 			catch (InterruptedException e) { e.printStackTrace();}
@@ -96,7 +97,7 @@ public class ZyreRequester {
 			}
 		}
 		
-		long percentage = Math.round( (double)received/(double)expected * 100 );
+		long percentage = Math.round( (double)received.get()/(double)expected * 100 );
 		log.info("sent: " + sent + " expected: " + expected + " received: " + received + " (" + percentage + "%)");
 		System.exit(0);
 	}
@@ -117,7 +118,7 @@ public class ZyreRequester {
 				
 				// responder messages are received here
 				if (eventType.equals("WHISPER")) {
-					received++;
+					received.getAndIncrement();
 				} 
 				// A device joins a group
 				else if (eventType.equals("JOIN")) {
